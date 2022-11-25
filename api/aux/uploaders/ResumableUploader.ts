@@ -15,7 +15,7 @@ export interface IUploadChunkResult extends IRequestUploadStatusResult {
 
 export default class ResumableUploader extends Uploader {
   private contentLength?: number
-  private location?: string
+  private __location?: string
   private shouldUseMultipleRequests?: boolean
   private __transferredByteCount: number = 0
 
@@ -27,7 +27,7 @@ export default class ResumableUploader extends Uploader {
     const response: Response = await new Fetcher(this.fetcher.gDriveApi, false)
       .appendHeader('Content-Range', `bytes */${this.contentLength ?? '*'}`)
       .setMethod('PUT')
-      .setResource(this.location!)
+      .setResource(this.__location!)
       .fetch()
 
     if (response.ok) {
@@ -59,6 +59,13 @@ export default class ResumableUploader extends Uploader {
     return this
   }
 
+  setLocation(location: string): ResumableUploader {
+    this.__location = location
+
+    return this
+  }
+
+
   setShouldUseMultipleRequests(shouldUseMultipleRequests: boolean): ResumableUploader {
     this.shouldUseMultipleRequests = shouldUseMultipleRequests
 
@@ -69,11 +76,15 @@ export default class ResumableUploader extends Uploader {
     return this.__transferredByteCount
   }
 
+  get location() {
+    return this.__location
+  }
+
   async uploadChunk(chunk: DataType): Promise<IUploadChunkResult> {
     const fetcher = new Fetcher(this.fetcher.gDriveApi, !this.shouldUseMultipleRequests)
       .setMethod('PUT')
       .setBody(Array.isArray(chunk) ? new Uint8Array(chunk) : chunk, this.dataType)
-      .setResource(this.location!)
+      .setResource(this.__location!)
 
     if (this.shouldUseMultipleRequests) {
       const from = this.transferredByteCount
@@ -130,7 +141,7 @@ export default class ResumableUploader extends Uploader {
       return response
     }
 
-    this.location = response.headers.get('Location')!
+    this.__location = response.headers.get('Location')!
 
     if (this.data) {
       return this.uploadChunk(this.data)
