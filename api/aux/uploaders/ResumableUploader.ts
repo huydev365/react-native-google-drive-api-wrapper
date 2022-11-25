@@ -80,7 +80,7 @@ export default class ResumableUploader extends Uploader {
     return this.__location
   }
 
-  async uploadChunk(chunk: DataType): Promise<IUploadChunkResult> {
+  async uploadChunk(chunk: DataType, fromPosition?: number): Promise<IUploadChunkResult> {
     const fetcher = new Fetcher(this.fetcher.gDriveApi, !this.shouldUseMultipleRequests)
       .setMethod('PUT')
       .setBody(Array.isArray(chunk) ? new Uint8Array(chunk) : chunk, this.dataType)
@@ -91,6 +91,13 @@ export default class ResumableUploader extends Uploader {
       const to = from + chunk.length - 1
       const total = this.contentLength ?? '*'
 
+      fetcher.appendHeader('Content-Range', `bytes ${from}-${to}/${total}`)
+    }
+
+    if (fromPosition) {
+      const from = fromPosition
+      const to = from + chunk.length - 1
+      const total = this.contentLength ?? '*'
       fetcher.appendHeader('Content-Range', `bytes ${from}-${to}/${total}`)
     }
 
