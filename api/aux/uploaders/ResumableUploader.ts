@@ -29,7 +29,6 @@ export default class ResumableUploader extends Uploader {
       .setMethod('PUT')
       .setResource(this.__location!)
       .fetch()
-
     if (response.ok) {
       return {
         isComplete: true,
@@ -94,16 +93,13 @@ export default class ResumableUploader extends Uploader {
       fetcher.appendHeader('Content-Range', `bytes ${from}-${to}/${total}`)
     }
 
-    if (fromPosition) {
-      const from = fromPosition
-      const to = from + chunk.length - 1
-      const total = this.contentLength ?? '*'
-      fetcher.appendHeader('Content-Range', `bytes ${from}-${to}/${total}`)
-    }
+    const from = fromPosition || 0
+    const to = from + chunk.length - 1
+    const total = this.contentLength ?? '*'
+    fetcher.appendHeader('Content-Range', `bytes ${from}-${to}/${total}`)
 
-    const response: Response = await fetcher.fetch()
-
-    if (!this.shouldUseMultipleRequests || response.ok) {
+    const response: Response = await fetcher.upload()
+    if (response.ok) {
       this.__transferredByteCount += chunk.length
 
       return {
@@ -128,10 +124,6 @@ export default class ResumableUploader extends Uploader {
   }
 
   protected async _execute(): FetchResultType {
-    if (this.data?.length) {
-      this.setContentLength(this.data.length)
-    }
-
     if (this.contentLength) {
       this.fetcher.appendHeader('X-Upload-Content-Length', this.contentLength.toString())
     }
@@ -158,6 +150,8 @@ export default class ResumableUploader extends Uploader {
   }
 
   private processRange(response: Response) {
+    if (!response.headers
+      .get('Range')) return 0
     return response.headers
       .get('Range')!
       .split('=')[1]

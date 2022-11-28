@@ -73,6 +73,30 @@ export default class Fetcher<SomeGDriveApi extends GDriveApi> {
     return this.responseType === 'blob' ? blobToByteArray(result) : result
   }
 
+  async upload(resource?: RequestInfo, responseType?: FetchResponseType): FetchResultType {
+    if (resource) {
+      this.setResource(resource)
+    }
+
+    if (responseType) {
+      this.setResponseType(responseType)
+    }
+
+    if (this.gDriveApi.fetchTimeout >= 0) {
+      setTimeout(() => this.abortController.abort(), this.gDriveApi.fetchTimeout)
+    }
+
+    let response: Response = await fetch(this.resource as RequestInfo, this.init)
+
+    if (!response.ok && response.status !== 308) {
+      if (this.fetchRejectsOnHttpErrors) {
+        throw await HttpError.create(response)
+      }
+    }
+
+    return response
+  }
+
   get gDriveApi() {
     return this.__gDriveApi
   }
