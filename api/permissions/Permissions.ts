@@ -1,6 +1,6 @@
 import GDriveApi from '../GDriveApi'
-import Fetcher from '../aux/Fetcher'
-import Uris from '../aux/Uris'
+import Fetcher from '../request/Fetcher'
+import Uris from '../request/Uris'
 import MimeTypes from '../../MimeTypes'
 
 export default class Permissions extends GDriveApi {

@@ -1,6 +1,6 @@
 import GDriveApi from '../GDriveApi'
-import { fetch } from '../aux/Fetcher'
-import Uris from '../aux/Uris'
+import { fetch } from '../request/Fetcher'
+import Uris from '../request/Uris'
 
 export default class About extends GDriveApi {
   get(queryParametersOrFields: object | string) {
